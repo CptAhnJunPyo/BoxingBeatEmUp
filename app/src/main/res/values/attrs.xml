@@ -1,7 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="GameView">
-        <attr name="backgroundColor" format="color" />
-        <attr name="difficulty" format="integer" />
+        <!-- Background related -->
+        <attr name="backgroundResource" format="reference" />
+        <attr name="roundTime" format="integer" />
+        <attr name="startingHealth" format="integer" />
+
+        <!-- Game settings -->
+        <attr name="difficulty" format="enum">
+            <enum name="easy" value="0"/>
+            <enum name="medium" value="1"/>
+            <enum name="hard" value="2"/>
+        </attr>
+
+        <!-- Stage boundaries -->
+        <attr name="stageBoundaryLeft" format="dimension" />
+        <attr name="stageBoundaryRight" format="dimension" />
+
+
     </declare-styleable>
 </resources>

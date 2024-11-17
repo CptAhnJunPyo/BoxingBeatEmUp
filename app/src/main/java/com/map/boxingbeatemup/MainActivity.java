@@ -11,16 +11,46 @@ import android.widget.Button;
 
 public class MainActivity extends Activity {
     private Button btnStart;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        btnStart = findViewById(R.id.btnStart);
+        try {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_main);
+            btnStart = findViewById(R.id.btnStart);
 
-        btnStart.setOnClickListener(view -> {
-            Intent intent = new Intent(MainActivity.this, GameActivity.class);
-            startActivity(intent);
-            finish();
-        });
+            btnStart.setOnClickListener(view -> {
+                try {
+                    Intent intent = new Intent(MainActivity.this, GameActivity.class);
+                    startActivity(intent);
+                    // Don't call finish() immediately
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        try {
+            super.onDestroy();
+            // Clean up resources
+            if (btnStart != null) {
+                btnStart.setOnClickListener(null);
+                btnStart = null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Only finish after the transition is complete
+        finish();
     }
 }

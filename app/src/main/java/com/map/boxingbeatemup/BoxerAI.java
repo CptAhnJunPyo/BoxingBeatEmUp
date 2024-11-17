@@ -3,7 +3,7 @@ package com.map.boxingbeatemup;
 import java.util.Random;
 
 public class BoxerAI {
-    private int SPRITE_WIDTH = 32;
+    private int SPRITE_WIDTH = 256;
     private Boxer aiBoxer;
     private Boxer playerBoxer;
     private Random random = new Random();

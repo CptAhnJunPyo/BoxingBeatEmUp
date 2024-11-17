@@ -8,10 +8,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.media.MediaPlayer;
 
 public class Boxer {
-    private static final int SPRITE_WIDTH = 32;
-    private static final int SPRITE_HEIGHT = 32;
+    private static final int SPRITE_WIDTH = 256;
+    private static final int SPRITE_HEIGHT = 256;
+    private Context context;
     // Animation states
     public enum State {
         IDLE(0, 4),
@@ -40,7 +42,7 @@ public class Boxer {
     private Rect collisionBox;
     private int health = 100;
     private ComboSystem comboSystem;
-    private SoundManager soundManager;
+    private MediaPlayer mp;
     private long lastAttackTime = 0;
     private boolean isAttacking = false;
     public Boxer(Context context, Resources resources, int resourceId, float startX, float startY) {
@@ -50,6 +52,7 @@ public class Boxer {
         collisionBox = new Rect();
         updateCollisionBox();
         comboSystem = new ComboSystem();
+        this.context = context;
     }
 
     private void updateCollisionBox() {
@@ -122,9 +125,11 @@ public class Boxer {
 
     public void punch() {
         long currentTime = System.currentTimeMillis();
+        context = context.getApplicationContext();
         if (currentTime - lastAttackTime >= ComboSystem.AttackType.PUNCH.recoveryTime) {
             setState(State.PUNCH);
-            soundManager.playSound("punch");
+            mp = MediaPlayer.create(context,R.raw.punch);
+            mp.start();
             comboSystem.addPunch();
             lastAttackTime = currentTime;
             isAttacking = true;
@@ -137,7 +142,9 @@ public class Boxer {
     }
     public void performKick(){
         setState(State.KICK);
-        soundManager.playSound("kick");
+        context = context.getApplicationContext();
+        mp = MediaPlayer.create(context, R.raw.kick);
+        mp.start();
         isAttacking = true;
         lastAttackTime = System.currentTimeMillis();
         comboSystem.resetCombo();
@@ -159,6 +166,12 @@ public class Boxer {
         return currentState;
     }
 
+    public void setX(float x) {
+        this.x = x;
+    }
+    public void setY(float y) {
+        this.y = y;
+    }
     // Getter for attack state
     public boolean isAttacking() {
         return currentState == State.PUNCH || currentState == State.KICK;
