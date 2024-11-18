@@ -4,6 +4,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.view.MotionEvent;
 
 public class ButtonController {
     private RectF leftButton;
@@ -14,6 +15,7 @@ public class ButtonController {
 
     private boolean leftPressed;
     private boolean rightPressed;
+    private boolean isHoldingMovement;
 
     public ButtonController(int screenWidth, int screenHeight) {
         // Create buttons in the bottom portion of the screen
@@ -67,12 +69,21 @@ public class ButtonController {
         canvas.drawText("A", attackButton.centerX(), textY, textPaint);
     }
 
-    public boolean handleTouch(float x, float y) {
-        leftPressed = leftButton.contains(x, y);
-        rightPressed = rightButton.contains(x, y);
+    public boolean handleTouch(float x, float y, int action) {
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+            case MotionEvent.ACTION_MOVE:
+                leftPressed = leftButton.contains(x, y);
+                rightPressed = rightButton.contains(x, y);
+                isHoldingMovement = leftPressed || rightPressed;
+                return attackButton.contains(x, y);
 
-        if (attackButton.contains(x, y)) {
-            return true;
+            case MotionEvent.ACTION_UP:
+                isHoldingMovement = false;
+                leftPressed = false;
+                rightPressed = false;
+                return false;
+
         }
         return false;
     }
@@ -88,5 +99,8 @@ public class ButtonController {
 
     public boolean isRightPressed() {
         return rightPressed;
+    }
+    public boolean isHoldingMovement() {
+        return isHoldingMovement;
     }
 }

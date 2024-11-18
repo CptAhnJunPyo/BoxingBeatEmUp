@@ -32,7 +32,7 @@ public class UIManager {
     public void drawUI(Canvas canvas, Boxer player1, Boxer player2) {
         // Draw health bars
         drawHealthBar(canvas, player1, 50, 30, true);
-        drawHealthBar(canvas, player2, screenWidth - 250, 30, false);
+        drawHealthBar(canvas, player2, screenWidth - 450, 30, false);
         // Draw combo counter
     }
 

@@ -28,7 +28,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private BoxerAI ai;
     private MediaPlayer mp;
     private Bitmap backgroundImage;
-    ButtonController buttonController;
+    private ButtonController buttonController;
     private int backgroundColor;
     private int difficulty;
     private int roundTime;
@@ -66,8 +66,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         setFocusable(true);
 
         // Initialize game objects
-        player1 = new Boxer(context, getResources(), R.drawable.boxer_sprites, 100, 300);
-        player2 = new Boxer(context, getResources(), R.drawable.boxer_sprites, 500, 300);
+        player1 = new Boxer(context, getResources(), R.drawable.boxer_sprites, 100, 450);
+        player2 = new Boxer(context, getResources(), R.drawable.boxer_sprites, 1000, 450);
         post(() -> {
             uiManager = new UIManager(getWidth(), getHeight());
             ai = new BoxerAI(player2, player1);
@@ -136,7 +136,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                                 getHeight(),
                                 true
                         );
-                        originalBitmap.recycle();
+
                     }
                 });
             } catch (Exception e) {
@@ -207,28 +207,22 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         float x = event.getX();
         float y = event.getY();
 
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-            case MotionEvent.ACTION_MOVE:
-                // Handle button presses
-                if (buttonController.handleTouch(x, y)) {
-                    player1.punch();
-                }
+        // Handle the touch event
+        boolean isAttacking = buttonController.handleTouch(x, y, event.getAction());
+        if (buttonController.isLeftPressed()) {
+            player1.move(-5);
+        } else if (buttonController.isRightPressed()) {
+            player1.move(5);
+        }
+        // Handle attack
+        if (isAttacking && event.getAction() == MotionEvent.ACTION_DOWN) {
+            player1.stopMoving();
+            player1.punch();
+        }
 
-                // Handle movement
-                if (buttonController.isLeftPressed()) {
-                    player1.move(-5);
-                } else if (buttonController.isRightPressed()) {
-                    player1.move(5);
-                }
-                break;
-
-            case MotionEvent.ACTION_UP:
-                buttonController.resetButtons();
-                if (!player1.isAttacking()) {
-                    player1.setState(Boxer.State.IDLE);
-                }
-                break;
+        // Handle movement state changes
+        if (!buttonController.isHoldingMovement() && !player1.isAttacking()) {
+            player1.setState(Boxer.State.IDLE);
         }
 
         // Check for hits
@@ -239,15 +233,22 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 player2.hit(ComboSystem.AttackType.PUNCH);
             }
         }
+        if (player2.isAttacking() && checkCollision(player2, player1)) {
+            if (player2.getCurrentState() == Boxer.State.KICK) {
+                player1.hit(ComboSystem.AttackType.KICK);
+            } else if (player2.getCurrentState() == Boxer.State.PUNCH) {
+                player1.hit(ComboSystem.AttackType.PUNCH);
+            }
+        }
+
         return true;
     }
 
     public void update() {
-        if(player1 != null) player1.update();
-        if(player2 != null) player2.update();
+        if (player1 != null) player1.update();
+        if (player2 != null) player2.update();
         keepBoxersInBounds();
     }
-
     @Override
     protected void onDraw(Canvas canvas) {
         if (canvas != null) {

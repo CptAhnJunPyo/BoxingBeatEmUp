@@ -11,6 +11,7 @@ import android.graphics.Rect;
 import android.media.MediaPlayer;
 
 public class Boxer {
+    private static final float MOVEMENT_SPEED = 5f;
     private static final int SPRITE_WIDTH = 256;
     private static final int SPRITE_HEIGHT = 256;
     private Context context;
@@ -40,9 +41,11 @@ public class Boxer {
     private float x, y;
     private boolean facingRight = true;
     private Rect collisionBox;
-    private int health = 100;
+    private int health = 200;
     private ComboSystem comboSystem;
     private MediaPlayer mp;
+    private boolean isMoving;
+    private float moveDirection;
     private long lastAttackTime = 0;
     private boolean isAttacking = false;
     public Boxer(Context context, Resources resources, int resourceId, float startX, float startY) {
@@ -52,29 +55,45 @@ public class Boxer {
         collisionBox = new Rect();
         updateCollisionBox();
         comboSystem = new ComboSystem();
+        this.facingRight = facingRight;
         this.context = context;
     }
 
     private void updateCollisionBox() {
-        collisionBox.left = (int)x;
+        collisionBox.left = (int)x + SPRITE_WIDTH*(1/4);
         collisionBox.top = (int)y;
-        collisionBox.right = (int)x + SPRITE_WIDTH;
+        collisionBox.right = (int)x + SPRITE_WIDTH*(3/4);
         collisionBox.bottom = (int)y + SPRITE_HEIGHT;
     }
 
     public void update() {
         long currentTime = System.currentTimeMillis();
+
+        // Update animation frame
         if (currentTime - lastFrameTime > FRAME_DELAY) {
             currentFrame = (currentFrame + 1) % currentState.frameCount;
             lastFrameTime = currentTime;
 
+            // Handle attack animation completion
             if (isAttacking && currentFrame == currentState.frameCount - 1) {
                 isAttacking = false;
                 setState(State.IDLE);
             }
         }
-        updateCollisionBox();
 
+        // Update movement
+        if (isMoving) {
+            x += moveDirection;
+            updateCollisionBox();
+        }
+
+        updateCollisionBox();
+    }
+    public void stopMoving() {
+        isMoving = false;
+        if (!isAttacking) {
+            setState(State.IDLE);
+        }
     }
 
     public void draw(Canvas canvas) {
@@ -118,7 +137,11 @@ public class Boxer {
     public void move(float dx) {
         x += dx;
         facingRight = dx > 0;
-        if (currentState == State.IDLE) {
+        isMoving = true;
+        moveDirection = dx;
+
+        // Only change to WALK state if not already in WALK state or if not attacking
+        if (currentState != State.WALK && !isAttacking) {
             setState(State.WALK);
         }
     }

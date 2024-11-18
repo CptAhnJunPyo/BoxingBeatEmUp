@@ -39,8 +39,8 @@ public class BoxerAI {
 
         lastActionTime = currentTime;
     }
-
     private void decideAttack() {
+        aiBoxer.punch();
         float r = random.nextFloat();
         if (r < 0.5) {
             aiBoxer.punch();
