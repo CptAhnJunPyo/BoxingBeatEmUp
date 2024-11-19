@@ -12,6 +12,7 @@
         app:backgroundResource="@drawable/fight_stage_background"
         app:difficulty="medium"
         app:roundTime="99"
-        app:startingHealth="100" />
+        app:startingHealth="200" />
+
 
 </RelativeLayout>

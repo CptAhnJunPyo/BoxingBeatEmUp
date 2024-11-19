@@ -216,7 +216,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         float y = event.getY();
 
         // Handle the touch event
-        if(!player1.isFallen()){
             boolean isAttacking = buttonController.handleTouch(x, y, event.getAction());
             if (buttonController.isLeftPressed()) {
                 player1.move(-5);
@@ -243,8 +242,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                     player2.hit(ComboSystem.AttackType.PUNCH);
                 }
             }
-        }
-        BotLogic();
+            BotLogic();
         return true;
     }
     public void BotLogic(){
