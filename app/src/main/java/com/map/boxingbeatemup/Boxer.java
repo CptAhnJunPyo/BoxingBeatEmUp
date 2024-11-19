@@ -20,10 +20,10 @@ public class Boxer {
         IDLE(0, 4),
         HIT(1, 2),
         FALL(2, 3),
-        PUNCH(3, 8),    // Punch animation in row 3 with 8 frames
-        KICK(5, 8),    // Assuming kick animation is in row 5 with 8 frames
-        WALK(4, 6);    // Walk moved to row 5
-
+        PUNCH(3, 3),    // Punch animation in row 3 with 8 frames
+        KICK(5, 5),    // Assuming kick animation is in row 5 with 8 frames
+        WALK(4, 6),    // Walk moved to row 5
+        FALLEN(6, 1);
         final int row;
         final int frameCount;
 
@@ -48,6 +48,9 @@ public class Boxer {
     private float moveDirection;
     private long lastAttackTime = 0;
     private boolean isAttacking = false;
+    private boolean isFallen = false;
+
+    private boolean isHit = false;
     public Boxer(Context context, Resources resources, int resourceId, float startX, float startY) {
         spriteSheet = BitmapFactory.decodeResource(resources, resourceId);
         x = startX;
@@ -60,9 +63,9 @@ public class Boxer {
     }
 
     private void updateCollisionBox() {
-        collisionBox.left = (int)x + SPRITE_WIDTH*(1/4);
+        collisionBox.left = (int)x + SPRITE_WIDTH*(0/4);
         collisionBox.top = (int)y;
-        collisionBox.right = (int)x + SPRITE_WIDTH*(3/4);
+        collisionBox.right = (int)x + SPRITE_WIDTH*(4/4);
         collisionBox.bottom = (int)y + SPRITE_HEIGHT;
     }
 
@@ -79,12 +82,20 @@ public class Boxer {
                 isAttacking = false;
                 setState(State.IDLE);
             }
+            if(isHit && currentFrame == currentState.frameCount - 1){
+                isHit = false;
+                if(isFallen){
+                    setState(State.FALLEN);
+                }
+                else setState(State.IDLE);
+            }
         }
 
         // Update movement
         if (isMoving) {
             x += moveDirection;
             updateCollisionBox();
+            setState(State.WALK);
         }
 
         updateCollisionBox();
@@ -139,7 +150,6 @@ public class Boxer {
         facingRight = dx > 0;
         isMoving = true;
         moveDirection = dx;
-
         // Only change to WALK state if not already in WALK state or if not attacking
         if (currentState != State.WALK && !isAttacking) {
             setState(State.WALK);
@@ -174,19 +184,26 @@ public class Boxer {
     }
     public void hit(ComboSystem.AttackType attackType) {
         int damage = attackType.damage;
-        setState(State.HIT);
+        isHit = true;
         health -= damage;
-        if (health <= 0) {
+        if(health >=0){
+            setState(State.HIT);
+            //setState(State.IDLE);
+        }
+        else if (health <= 0) {
             health = 0;
             setState(State.FALL);
+            isFallen = true;
+            setState(State.FALLEN);
         }
-    }
 
-    public boolean isColliding(Boxer other) {
-        return Rect.intersects(this.collisionBox, other.collisionBox);
     }
     public State getCurrentState() {
         return currentState;
+    }
+
+    public void setFacingRight(boolean facingRight) {
+        this.facingRight = facingRight;
     }
 
     public void setX(float x) {
@@ -199,12 +216,16 @@ public class Boxer {
     public boolean isAttacking() {
         return currentState == State.PUNCH || currentState == State.KICK;
     }
-
+    public boolean isHit(){
+        return currentState == State.HIT;
+    }
     // Getter for facing direction
     public boolean isFacingRight() {
         return facingRight;
     }
-
+    public boolean isFallen(){
+        return currentState == State.FALLEN;
+    }
     // Getter for collision box
     public Rect getCollisionBox() {
         return collisionBox;
