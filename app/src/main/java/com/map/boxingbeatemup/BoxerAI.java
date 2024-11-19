@@ -39,11 +39,23 @@ public class BoxerAI {
 
         lastActionTime = currentTime;
     }
-    private void decideAttack() {
-        aiBoxer.punch();
+    /*public boolean isMoving(){
+        float distance = Math.abs(aiBoxer.getX() - playerBoxer.getX());
+        if(distance > SPRITE_WIDTH * 2);
+        }
+    }*/
+    public boolean decideAttack() {
         float r = random.nextFloat();
         if (r < 0.5) {
-            aiBoxer.punch();
+            return true;
         }
+        else return false;
+    }
+    public boolean chanceProcCombo(){
+        float r2 = random.nextFloat();
+        if(r2<0.4){
+            return true;
+        }
+        else return false;
     }
 }

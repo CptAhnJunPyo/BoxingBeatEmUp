@@ -13,6 +13,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.Toast;
 
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
@@ -35,6 +36,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private int startingHealth;
     private float stageBoundaryLeft;
     private float stageBoundaryRight;
+    private int currentRound = 1;
+    private static final int MAX_ROUNDS = 3;
+    private boolean roundOver = false;
+    private static final int ROUND_START_DELAY = 3000; // 3 seconds
+    private long roundEndTime = 0;
+    private boolean isEndGame = false;
     private static final long DOUBLE_TAP_TIME = 300; // ms window for double tap
 
     public GameView(Context context, AttributeSet attrs) {
@@ -68,6 +75,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         // Initialize game objects
         player1 = new Boxer(context, getResources(), R.drawable.boxer_sprites, 100, 450);
         player2 = new Boxer(context, getResources(), R.drawable.boxer_sprites, 1000, 450);
+        player2.setFacingRight(false);
         post(() -> {
             uiManager = new UIManager(getWidth(), getHeight());
             ai = new BoxerAI(player2, player1);
@@ -203,51 +211,66 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
+    public boolean onTouchEvent(MotionEvent event) { //player1 action
         float x = event.getX();
         float y = event.getY();
 
         // Handle the touch event
-        boolean isAttacking = buttonController.handleTouch(x, y, event.getAction());
-        if (buttonController.isLeftPressed()) {
-            player1.move(-5);
-        } else if (buttonController.isRightPressed()) {
-            player1.move(5);
-        }
-        // Handle attack
-        if (isAttacking && event.getAction() == MotionEvent.ACTION_DOWN) {
-            player1.stopMoving();
-            player1.punch();
-        }
+        if(!player1.isFallen()){
+            boolean isAttacking = buttonController.handleTouch(x, y, event.getAction());
+            if (buttonController.isLeftPressed()) {
+                player1.move(-5);
+            } else if (buttonController.isRightPressed()) {
+                player1.move(5);
+            }
+            // Handle attack
+            if(!player1.isHit()){
+                if (isAttacking && event.getAction() == MotionEvent.ACTION_DOWN) {
+                    player1.stopMoving();
+                    player1.punch();
+                }
+            }
+            // Handle movement state changes
+            if (!buttonController.isHoldingMovement() && !player1.isAttacking()) {
+                player1.setState(Boxer.State.IDLE);
+            }
 
-        // Handle movement state changes
-        if (!buttonController.isHoldingMovement() && !player1.isAttacking()) {
-            player1.setState(Boxer.State.IDLE);
-        }
-
-        // Check for hits
-        if (player1.isAttacking() && checkCollision(player1, player2)) {
-            if (player1.getCurrentState() == Boxer.State.KICK) {
-                player2.hit(ComboSystem.AttackType.KICK);
-            } else if (player1.getCurrentState() == Boxer.State.PUNCH) {
-                player2.hit(ComboSystem.AttackType.PUNCH);
+            // Check for hits
+            if (player1.isAttacking() && checkCollision(player1, player2)) {
+                if (player1.getCurrentState() == Boxer.State.KICK) {
+                    player2.hit(ComboSystem.AttackType.KICK);
+                } else if (player1.getCurrentState() == Boxer.State.PUNCH) {
+                    player2.hit(ComboSystem.AttackType.PUNCH);
+                }
             }
         }
-        if (player2.isAttacking() && checkCollision(player2, player1)) {
-            if (player2.getCurrentState() == Boxer.State.KICK) {
-                player1.hit(ComboSystem.AttackType.KICK);
-            } else if (player2.getCurrentState() == Boxer.State.PUNCH) {
-                player1.hit(ComboSystem.AttackType.PUNCH);
-            }
-        }
-
+        BotLogic();
         return true;
     }
-
+    public void BotLogic(){
+        if(!player2.isFallen()){
+            if(!player2.isHit()){
+                if (ai.decideAttack()) {
+                    player2.punch();
+                    if(ai.chanceProcCombo()){
+                        player2.punch();
+                    }
+                }
+            }
+            if (player2.isAttacking() && checkCollision(player2, player1)) {
+                if (player2.getCurrentState() == Boxer.State.KICK) {
+                    player1.hit(ComboSystem.AttackType.KICK);
+                } else if (player2.getCurrentState() == Boxer.State.PUNCH) {
+                    player1.hit(ComboSystem.AttackType.PUNCH);
+                }
+            }
+        }
+    }
     public void update() {
         if (player1 != null) player1.update();
         if (player2 != null) player2.update();
         keepBoxersInBounds();
+        checkRoundStatus();
     }
     @Override
     protected void onDraw(Canvas canvas) {
@@ -257,7 +280,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
             // Draw background if available
             if (backgroundImage != null) {
-                canvas.drawBitmap(backgroundImage, 0, 0, null);
+                //canvas.drawBitmap(backgroundImage, 0, 0, null);
             }
 
             // Draw game elements
@@ -299,7 +322,38 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
         return Rect.intersects(attackBox, defender.getCollisionBox());
     }
+    private void checkRoundStatus() {
+        if (!roundOver && (player1.isFallen() || player2.isFallen())) {
+            roundOver = true;
+            roundEndTime = System.currentTimeMillis();
+        }
 
+        // Check if it's time to start a new round
+        if (roundOver && System.currentTimeMillis() - roundEndTime >= ROUND_START_DELAY) {
+            startNewRound();
+        }
+    }
+    private void startNewRound() {
+        if (currentRound < MAX_ROUNDS) {
+            // Reset players
+            player1 = new Boxer(getContext(), getResources(), R.drawable.boxer_sprites, 100, 450);
+            player2 = new Boxer(getContext(), getResources(), R.drawable.boxer_sprites, 1000, 450);
+            player2.setFacingRight(false);
+
+            // Reset round state
+            roundOver = false;
+            currentRound++;
+
+            // Reset AI
+            ai = new BoxerAI(player2, player1);
+        } else {
+            currentRound = 0;
+            //isEndGame = true;
+        }
+    }
+    public boolean isGameEnded(){
+        return isEndGame;
+    }
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();

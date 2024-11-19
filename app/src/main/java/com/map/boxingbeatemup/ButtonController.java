@@ -75,7 +75,12 @@ public class ButtonController {
             case MotionEvent.ACTION_MOVE:
                 leftPressed = leftButton.contains(x, y);
                 rightPressed = rightButton.contains(x, y);
-                isHoldingMovement = leftPressed || rightPressed;
+                isHoldingMovement = false;  // Reset the holding state
+
+                // Only set isHoldingMovement true if we're currently touching a movement button
+                if (leftPressed || rightPressed) {
+                    isHoldingMovement = true;
+                }
                 return attackButton.contains(x, y);
 
             case MotionEvent.ACTION_UP:

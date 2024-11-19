@@ -1,6 +1,7 @@
 package com.map.boxingbeatemup;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -32,6 +33,9 @@ public class GameActivity extends Activity {
 
         // Initialize GameView
         gameView = findViewById(R.id.gameView);
+        /*if(gameView.isGameEnded()){
+            Intent intent = new Intent(GameActivity.this, MainActivity.class);
+        }*/
     }
     @Override
     public void onConfigurationChanged(Configuration newConfig) {

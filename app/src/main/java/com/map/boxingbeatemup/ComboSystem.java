@@ -37,8 +37,7 @@ public class ComboSystem {
     }
 
     private void clearOldPunches(long currentTime) {
-        while (!punchTimes.isEmpty() &&
-                currentTime - punchTimes.get(0) > COMBO_WINDOW) {
+        while (!punchTimes.isEmpty() && currentTime - punchTimes.get(0) > COMBO_WINDOW) {
             punchTimes.remove(0);
         }
         if (punchTimes.isEmpty()) {
