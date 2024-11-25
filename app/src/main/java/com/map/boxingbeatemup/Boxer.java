@@ -1,7 +1,5 @@
 package com.map.boxingbeatemup;
 
-import static com.map.boxingbeatemup.ComboSystem.AttackType.KICK;
-
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -43,7 +41,7 @@ public class Boxer {
     private Rect collisionBox;
     private int health = 200;
     private ComboSystem comboSystem;
-    private MediaPlayer mp;
+    private MediaPlayer mp, mp1;
     private boolean isMoving;
     private float moveDirection;
     private long lastAttackTime = 0;
@@ -63,10 +61,18 @@ public class Boxer {
     }
 
     private void updateCollisionBox() {
-        collisionBox.left = (int)x + SPRITE_WIDTH*(0/4);
-        collisionBox.top = (int)y;
-        collisionBox.right = (int)x + SPRITE_WIDTH*(4/4);
-        collisionBox.bottom = (int)y + SPRITE_HEIGHT;
+        if(isFacingRight()){
+            collisionBox.left = (int)x + SPRITE_WIDTH*(1/4);
+            collisionBox.top = (int)y;
+            collisionBox.right = (int)x + SPRITE_WIDTH*(4/4);
+            collisionBox.bottom = (int)y + SPRITE_HEIGHT;
+        }
+        else {
+            collisionBox.left = (int)x + SPRITE_WIDTH*(0/4);
+            collisionBox.top = (int)y;
+            collisionBox.right = (int)x + SPRITE_WIDTH*(3/4);
+            collisionBox.bottom = (int)y + SPRITE_HEIGHT;
+        }
     }
 
     public void update() {
@@ -102,9 +108,8 @@ public class Boxer {
     }
     public void stopMoving() {
         isMoving = false;
-        if (!isAttacking) {
-            setState(State.IDLE);
-        }
+        setState(State.IDLE);
+
     }
 
     public void draw(Canvas canvas) {
@@ -161,8 +166,6 @@ public class Boxer {
         context = context.getApplicationContext();
         if (currentTime - lastAttackTime >= ComboSystem.AttackType.PUNCH.recoveryTime) {
             setState(State.PUNCH);
-            mp = MediaPlayer.create(context,R.raw.punch);
-            mp.start();
             comboSystem.addPunch();
             lastAttackTime = currentTime;
             isAttacking = true;
@@ -176,14 +179,20 @@ public class Boxer {
     public void performKick(){
         setState(State.KICK);
         context = context.getApplicationContext();
-        mp = MediaPlayer.create(context, R.raw.kick);
-        mp.start();
         isAttacking = true;
         lastAttackTime = System.currentTimeMillis();
         comboSystem.resetCombo();
     }
     public void hit(ComboSystem.AttackType attackType) {
         int damage = attackType.damage;
+        if(attackType == ComboSystem.AttackType.PUNCH){
+            mp = MediaPlayer.create(context,R.raw.kick);
+            mp.start();
+        }
+        else if(attackType == ComboSystem.AttackType.KICK){
+            mp1 = MediaPlayer.create(context,R.raw.kick);
+            mp1.start();
+        }
         isHit = true;
         health -= damage;
         if(health >=0){

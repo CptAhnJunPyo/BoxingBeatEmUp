@@ -7,9 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
-import android.media.MediaPlayer;
 import android.util.AttributeSet;
-import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -22,14 +20,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private GameThread gameThread;
     private Boxer player1;
     private Boxer player2;
-    private float touchX, touchY;
-    private float lastTouchX;
-    private long lastTouchTime;
     private UIManager uiManager;
     private BoxerAI ai;
-    private MediaPlayer mp;
     private Bitmap backgroundImage;
-    private ButtonController buttonController;
+    private JoystickController joystickController;
     private int backgroundColor;
     private int difficulty;
     private int roundTime;
@@ -79,7 +73,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         post(() -> {
             uiManager = new UIManager(getWidth(), getHeight());
             ai = new BoxerAI(player2, player1);
-            buttonController = new ButtonController(getWidth(), getHeight());
+            joystickController = new JoystickController(getWidth(), getHeight());
         });
         backgroundColor = Color.WHITE;
         difficulty = 1;
@@ -121,6 +115,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 a.recycle();
             }
         }
+
     }
     private void loadBackgroundImage(int resourceId) {
         if (resourceId != -1) {
@@ -136,7 +131,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 post(() -> {
                     if (originalBitmap != null) {
                         if (backgroundImage != null) {
-                            backgroundImage.recycle();
+                            //backgroundImage.recycle();
+                            backgroundImage = null;
                         }
                         backgroundImage = Bitmap.createScaledBitmap(
                                 originalBitmap,
@@ -181,7 +177,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                     true
             );
             if (scaledBitmap != backgroundImage) {
-                backgroundImage.recycle();
+                //backgroundImage.recycle();
                 backgroundImage = scaledBitmap;
             }
         }
@@ -205,7 +201,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         // Also clean up background here for safety
         if (backgroundImage != null) {
-            backgroundImage.recycle();
+            //backgroundImage.recycle();
             backgroundImage = null;
         }
     }
@@ -214,38 +210,39 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public boolean onTouchEvent(MotionEvent event) { //player1 action
         float x = event.getX();
         float y = event.getY();
-
         // Handle the touch event
-            boolean isAttacking = buttonController.handleTouch(x, y, event.getAction());
-            if (buttonController.isLeftPressed()) {
-                player1.move(-5);
-            } else if (buttonController.isRightPressed()) {
-                player1.move(5);
-            }
-            // Handle attack
-            if(!player1.isHit()){
-                if (isAttacking && event.getAction() == MotionEvent.ACTION_DOWN) {
-                    player1.stopMoving();
-                    player1.punch();
-                }
-            }
-            // Handle movement state changes
-            if (!buttonController.isHoldingMovement() && !player1.isAttacking()) {
-                player1.setState(Boxer.State.IDLE);
-            }
 
-            // Check for hits
-            if (player1.isAttacking() && checkCollision(player1, player2)) {
-                if (player1.getCurrentState() == Boxer.State.KICK) {
-                    player2.hit(ComboSystem.AttackType.KICK);
-                } else if (player1.getCurrentState() == Boxer.State.PUNCH) {
-                    player2.hit(ComboSystem.AttackType.PUNCH);
-                }
+        boolean isAttacking = joystickController.handleTouch(x, y, event.getAction());
+        if (joystickController.isMovingLeft()) {
+            player1.move(-5);
+        } else if (joystickController.isMovingRight()) {
+            player1.move(5);
+        } else if (!joystickController.isJoystickActive()){
+            player1.stopMoving();
+        }
+        // Handle attack
+        if(!player1.isHit()){
+            if (isAttacking && event.getAction() == MotionEvent.ACTION_DOWN) {
+                player1.stopMoving();
+                player1.punch();
             }
-            BotLogic();
+        }
+        // Handle movement state changes
+        if (!joystickController.isJoystickActive() && !player1.isAttacking()) {
+            player1.setState(Boxer.State.IDLE);
+        }
+
+        // Check for hits
+        if (player1.isAttacking() && checkCollision(player1, player2) && !player2.isFallen()) {
+            if (player1.getCurrentState() == Boxer.State.KICK) {
+                player2.hit(ComboSystem.AttackType.KICK);
+            } else if (player1.getCurrentState() == Boxer.State.PUNCH) {
+                player2.hit(ComboSystem.AttackType.PUNCH);
+            }
+        }
         return true;
     }
-    public void BotLogic(){
+    public void BotLogic(Boxer boxer){
         if(!player2.isFallen()){
             if(!player2.isHit()){
                 if (ai.decideAttack()) {
@@ -255,7 +252,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                     }
                 }
             }
-            if (player2.isAttacking() && checkCollision(player2, player1)) {
+            if (player2.isAttacking() && checkCollision(player2, player1) && !player1.isFallen()) {
                 if (player2.getCurrentState() == Boxer.State.KICK) {
                     player1.hit(ComboSystem.AttackType.KICK);
                 } else if (player2.getCurrentState() == Boxer.State.PUNCH) {
@@ -278,7 +275,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
             // Draw background if available
             if (backgroundImage != null) {
-                //canvas.drawBitmap(backgroundImage, 0, 0, null);
+                canvas.drawBitmap(backgroundImage, 0, 0, null);
             }
 
             // Draw game elements
@@ -287,8 +284,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             if (uiManager != null) {
                 uiManager.drawUI(canvas, player1, player2);
             }
-            if (buttonController != null) {
-                buttonController.draw(canvas);
+            if (joystickController != null) {
+                joystickController.draw(canvas);
             }
         }
     }
@@ -357,7 +354,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         super.onDetachedFromWindow();
         // Clean up bitmap resources
         if (backgroundImage != null) {
-            backgroundImage.recycle();
+            //backgroundImage.recycle();
             backgroundImage = null;
         }
     }

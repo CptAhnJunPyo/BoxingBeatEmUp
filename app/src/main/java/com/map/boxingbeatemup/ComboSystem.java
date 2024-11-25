@@ -5,14 +5,14 @@ import java.util.List;
 
 public class ComboSystem {
     private static final long COMBO_WINDOW = 800; // 800ms window for combo
-    private static final int REQUIRED_PUNCHES = 2; // punches needed for kick
+    private static final int REQUIRED_PUNCHES = 3; // punches needed for kick
     private List<Long> punchTimes = new ArrayList<>();
     private boolean kickReady = false;
 
     public enum AttackType {
         PUNCH(10, 200),    // 10 damage, 200ms recovery
-        KICK(25, 400);     // 25 damage, 400ms recovery
-
+        KICK(25, 400),   // 25 damage, 400ms recovery
+        PUNCH2(10,200);
         final int damage;
         final int recoveryTime;
 
