@@ -36,6 +36,9 @@ public class GameActivity extends Activity {
         /*if(gameView.isGameEnded()){
             Intent intent = new Intent(GameActivity.this, MainActivity.class);
         }*/
+        if (gameView != null) {
+            gameView.resume(); // Ensure the game thread starts
+        }
     }
     @Override
     public void onConfigurationChanged(Configuration newConfig) {

@@ -22,7 +22,7 @@ public class ComboSystem {
         }
     }
 
-    public void addPunch() {
+    /*public void addPunch() {
         long currentTime = System.currentTimeMillis();
         clearOldPunches(currentTime);
         punchTimes.add(currentTime);
@@ -34,7 +34,7 @@ public class ComboSystem {
                 kickReady = true;
             }
         }
-    }
+    }*/
 
     private void clearOldPunches(long currentTime) {
         while (!punchTimes.isEmpty() && currentTime - punchTimes.get(0) > COMBO_WINDOW) {

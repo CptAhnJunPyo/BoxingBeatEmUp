@@ -62,15 +62,15 @@ public class Boxer {
 
     private void updateCollisionBox() {
         if(isFacingRight()){
-            collisionBox.left = (int)x + SPRITE_WIDTH*(1/4);
+            collisionBox.left = (int)((int)x + SPRITE_WIDTH*(0.25));
             collisionBox.top = (int)y;
-            collisionBox.right = (int)x + SPRITE_WIDTH*(4/4);
+            collisionBox.right = (int)((int)x + SPRITE_WIDTH*(0.75));
             collisionBox.bottom = (int)y + SPRITE_HEIGHT;
         }
         else {
-            collisionBox.left = (int)x + SPRITE_WIDTH*(0/4);
+            collisionBox.left = (int)((int)x + SPRITE_WIDTH*(0.25));
             collisionBox.top = (int)y;
-            collisionBox.right = (int)x + SPRITE_WIDTH*(3/4);
+            collisionBox.right = (int)((int)x + SPRITE_WIDTH*(0.75));
             collisionBox.bottom = (int)y + SPRITE_HEIGHT;
         }
     }
@@ -166,14 +166,14 @@ public class Boxer {
         context = context.getApplicationContext();
         if (currentTime - lastAttackTime >= ComboSystem.AttackType.PUNCH.recoveryTime) {
             setState(State.PUNCH);
-            comboSystem.addPunch();
+            //comboSystem.addPunch();
             lastAttackTime = currentTime;
             isAttacking = true;
 
             // Check if kick combo is ready
-            if (comboSystem.isKickReady()) {
+            /*if (comboSystem.isKickReady()) {
                 performKick();
-            }
+            }*/
         }
     }
     public void performKick(){
@@ -195,7 +195,7 @@ public class Boxer {
         }
         isHit = true;
         health -= damage;
-        if(health >=0){
+        if(health >0){
             setState(State.HIT);
             //setState(State.IDLE);
         }

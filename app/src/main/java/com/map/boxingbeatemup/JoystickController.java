@@ -17,12 +17,15 @@ public class JoystickController {
     private boolean isJoystickActive;
 
     private RectF attackButton;
+    private RectF attackButton1;
     private boolean isAttackPressed;
-
+    private boolean isAttack1Pressed;
     private Paint joystickBasePaint;
     private Paint joystickKnobPaint;
     private Paint attackButtonPaint;
     private Paint attackButtonTextPaint;
+    private Paint attackButton1Paint;
+    private Paint attackButton1TextPaint;
 
     // Movement thresholds and speed control
     private static final float MOVEMENT_THRESHOLD = 0.2f;
@@ -52,6 +55,12 @@ public class JoystickController {
                 screenWidth - 50,
                 screenHeight - 50
         );
+        attackButton1 = new RectF(
+                screenWidth - attackButtonSize - 250,
+                screenHeight - attackButtonSize - 50,
+                screenWidth - 250,
+                screenHeight - 50
+        );
 
         // Initialize paints
         joystickBasePaint = new Paint();
@@ -70,6 +79,15 @@ public class JoystickController {
         attackButtonTextPaint.setColor(Color.BLACK);
         attackButtonTextPaint.setTextSize(attackButtonSize / 3);
         attackButtonTextPaint.setTextAlign(Paint.Align.CENTER);
+
+        attackButton1Paint = new Paint();
+        attackButton1Paint.setColor(Color.argb(100, 255, 100, 100));
+        attackButton1Paint.setStyle(Paint.Style.FILL);
+
+        attackButton1TextPaint = new Paint();
+        attackButton1TextPaint.setColor(Color.BLACK);
+        attackButton1TextPaint.setTextSize(attackButtonSize / 3);
+        attackButton1TextPaint.setTextAlign(Paint.Align.CENTER);
     }
 
     public void draw(Canvas canvas) {
@@ -79,7 +97,7 @@ public class JoystickController {
         // Draw joystick knob
         canvas.drawCircle(currentKnobX, currentKnobY, knobRadius, joystickKnobPaint);
 
-        // Draw attack button
+        // Draw attack button1
         float centerX = attackButton.centerX();
         float centerY = attackButton.centerY();
         float radius = (attackButton.width() / 2);
@@ -90,6 +108,19 @@ public class JoystickController {
         // Draw the "A" label
         float textY = centerY + attackButtonTextPaint.getTextSize() / 3;
         canvas.drawText("A", centerX, textY, attackButtonTextPaint);
+
+
+        float centerX1 = attackButton1.centerX();
+        float centerY1 = attackButton1.centerY();
+        float radius1 = (attackButton1.width() / 2);
+
+        // Draw the circular attack button
+        canvas.drawCircle(centerX1, centerY1, radius1, attackButtonPaint);
+
+        // Draw the "A" label
+        float textY1 = centerY + attackButtonTextPaint.getTextSize() / 3;
+        canvas.drawText("A1", centerX1, textY1, attackButtonTextPaint);
+
     }
 
     public boolean handleTouch(float x, float y, int action) {
@@ -110,6 +141,14 @@ public class JoystickController {
                     isAttackPressed = true;
                     return true;
                 }
+                //Check if attack button 1 is pressed
+                float centerX1 = attackButton1.centerX();
+                float centerY1= attackButton1.centerY();
+                float radius1 = attackButton1.width() / 2;
+                if (distance(x, y, centerX1, centerY1) < radius1) {
+                    isAttack1Pressed = true;
+                    return true;
+                }
                 break;
 
             case MotionEvent.ACTION_MOVE:
@@ -123,7 +162,6 @@ public class JoystickController {
                 resetJoystick();
                 resetAttack();
         }
-
         return isAttackPressed;
     }
 
@@ -171,6 +209,13 @@ public class JoystickController {
         float radius = attackButton.width() / 2;
         return distance(x, y, centerX, centerY) < radius;
     }
+    public boolean isAttackButton1Area(float x, float y) {
+        float centerX1 = attackButton1.centerX();
+        float centerY1 = attackButton1.centerY();
+        float radius1 = attackButton1.width() / 2;
+        return distance(x, y, centerX1, centerY1) < radius1;
+    }
+
     public boolean isMovingLeft() {
         return isMovingLeft;
     }
@@ -188,6 +233,9 @@ public class JoystickController {
     }
     public boolean isAttackPressed(){
         return isAttackPressed;
+    }
+    public boolean isAttack1Pressed(){
+        return isAttack1Pressed;
     }
     public void resetJoystick() {
         isJoystickActive = false;

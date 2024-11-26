@@ -23,7 +23,7 @@ public class MainActivity extends Activity {
                 try {
                     Intent intent = new Intent(MainActivity.this, GameActivity.class);
                     startActivity(intent);
-                    // Don't call finish() immediately
+                    finish();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

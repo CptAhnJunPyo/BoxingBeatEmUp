@@ -36,7 +36,6 @@ public class BoxerAI {
                 aiBoxer.move(dodgeDirection);
             }
         }
-
         lastActionTime = currentTime;
     }
     /*public boolean isMoving(){

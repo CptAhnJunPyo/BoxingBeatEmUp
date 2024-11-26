@@ -181,7 +181,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 backgroundImage = scaledBitmap;
             }
         }
-
         // Update stage boundaries
         stageBoundaryLeft = 0;
         stageBoundaryRight = width;
@@ -210,9 +209,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public boolean onTouchEvent(MotionEvent event) { //player1 action
         float x = event.getX();
         float y = event.getY();
-        // Handle the touch event
 
+        // Handle the touch event
         boolean isAttacking = joystickController.handleTouch(x, y, event.getAction());
+        boolean isAttacking1 = joystickController.handleTouch(x, y, event.getAction());
         if (joystickController.isMovingLeft()) {
             player1.move(-5);
         } else if (joystickController.isMovingRight()) {
@@ -221,10 +221,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             player1.stopMoving();
         }
         // Handle attack
-        if(!player1.isHit()){
-            if (isAttacking && event.getAction() == MotionEvent.ACTION_DOWN) {
+        if(!player1.isHit() || !player1.isFallen()){
+            if (joystickController.isAttackPressed() && event.getAction() == MotionEvent.ACTION_DOWN) {
                 player1.stopMoving();
                 player1.punch();
+            }
+            else if (joystickController.isAttack1Pressed() && event.getAction() == MotionEvent.ACTION_DOWN) {
+                player1.stopMoving();
+                player1.performKick();
             }
         }
         // Handle movement state changes
@@ -240,9 +244,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 player2.hit(ComboSystem.AttackType.PUNCH);
             }
         }
+        BotLogic();
         return true;
     }
-    public void BotLogic(Boxer boxer){
+    public void BotLogic(){
         if(!player2.isFallen()){
             if(!player2.isHit()){
                 if (ai.decideAttack()) {
@@ -310,9 +315,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         if (attacker.getCurrentState() == Boxer.State.KICK) {
             // Extend attack range for kick
             if (attacker.isFacingRight()) {
-                attackBox.right += SPRITE_WIDTH / 2;
+                attackBox.right += SPRITE_WIDTH / 4;
             } else {
-                attackBox.left -= SPRITE_WIDTH / 2;
+                attackBox.left -= SPRITE_WIDTH / 4;
             }
         }
         return Rect.intersects(attackBox, defender.getCollisionBox());
